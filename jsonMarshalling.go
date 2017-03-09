@@ -1,10 +1,10 @@
 package main
 
-// Print the different marshall/unmarshal results of different structures into/from JSON
+// Print the different marshal/unmarshal results of different structures into/from JSON
 //
-// 1) struct
-// 2) struct array
-// 3) struct list
+// 1) GO struct -> JSON and JSON string -> struct
+// 2) GO struct array -> JSON and JSON string -> struct array
+// 3) GO struct list -> JSON and JSON string -> struct list
 //
 // Copyright (C) 2017 framp at linux-tips-and-tricks dot de
 
@@ -14,7 +14,9 @@ import (
 	"fmt"
 )
 
-// --- different structs to marshall
+// ------------------------------------
+// --- different structs to marshal ---
+// ------------------------------------
 
 // SimpleStruct -
 type SimpleStruct struct {
@@ -33,7 +35,9 @@ var simpleStruct = SimpleStruct{
 	Value: "Bar",
 }
 
-// --- initialize structs to unmarshall
+// -----------------------------------
+// --- initialize structs to unmarshal
+// -----------------------------------
 
 var simpleStructList = SimpleStructList{
 	"Element1": SimpleStruct{
@@ -75,6 +79,10 @@ var structSamples = []struct {
 	{"SimpleStructList", simpleStructList},
 }
 
+// --------------------------------------
+// --- different strings to unmarshal ---
+// --------------------------------------
+
 var simpleStructBlob = []byte(`
 		{ "Name": "Foo", "Value": "Bar" }
 	`)
@@ -106,7 +114,8 @@ var blobSamples = []struct {
 
 func main() {
 
-	fmt.Println("--------------- Go struct to JSON (Marshall) ----------------")
+	fmt.Println("--------------- Go struct to JSON (Marshal) ----------------")
+	fmt.Println()
 
 	for _, s := range structSamples {
 
@@ -115,7 +124,8 @@ func main() {
 
 	}
 
-	fmt.Println("--------------- JSON to GO struct (Unmarshall) ----------------")
+	fmt.Println("--------------- JSON to GO struct (Unmarshal) ----------------")
+	fmt.Println()
 
 	simpleStruct := new(SimpleStruct)
 	err := json.Unmarshal(simpleStructBlob, simpleStruct)
