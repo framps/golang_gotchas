@@ -76,13 +76,23 @@ var structSamples = []struct {
 }
 
 var simpleStructBlob = []byte(`
-		{"Name": "Foo", "Value": "Bar"}
+		{ "Name": "Foo", "Value": "Bar" }
 	`)
 
 var simpleStructArrayBlob = []byte(`[
-	{"Name": "Foo1", "Value": "Bar2"},
-	{"Name": "Foo2", "Value": "Bar2"}
+	{ "Name": "Foo1", "Value": "Bar2" },
+	{ "Name": "Foo2", "Value": "Bar2" }
 		]
+	`)
+
+var simpleStructListBlob = []byte(` {
+	"Element1" : {
+				"Name": "Foo1", "Value": "Bar2"
+			},
+	"Element2" : {
+				"Name": "Foo2", "Value": "Bar2"
+			}
+	}
 	`)
 
 var blobSamples = []struct {
@@ -91,6 +101,7 @@ var blobSamples = []struct {
 }{
 	{"SimpleStructBlob", simpleStruct},
 	{"SimpleStructArrayBlob", simpleStructArrayBlob},
+	{"SimpleStructListBlob", simpleStructListBlob},
 }
 
 func main() {
@@ -119,5 +130,12 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("%s: %+v\n", "SimpleStructArrayBlob", *simpleStructArray)
+
+	simpleStructList := new(SimpleStructList)
+	err = json.Unmarshal(simpleStructListBlob, simpleStructList)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s: %+v\n", "SimpleStructListBlob", *simpleStructList)
 
 }
