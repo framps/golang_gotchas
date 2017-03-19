@@ -9,9 +9,10 @@ package main
 // Copyright (C) 2017 framp at linux-tips-and-tricks dot de
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/framps/golang_gotchas/utils"
 )
 
 // ------------------------------------
@@ -59,15 +60,6 @@ var simpleStructArray = SimpleStructArray{
 		Name:  "Foo2",
 		Value: "Bar2",
 	},
-}
-
-func prettyPrint(body []byte) *bytes.Buffer {
-	var prettyJSON bytes.Buffer
-	err := json.Indent(&prettyJSON, body, "", "   ")
-	if err != nil {
-		panic(err)
-	}
-	return &prettyJSON
 }
 
 var structSamples = []struct {
@@ -120,7 +112,7 @@ func main() {
 	for _, s := range structSamples {
 
 		buffer, _ := json.Marshal(s.StructValue)
-		fmt.Printf("%s: %s\n", s.Name, prettyPrint(buffer))
+		fmt.Printf("%s: %s\n", s.Name, utils.PrettyPrint(buffer))
 
 	}
 
