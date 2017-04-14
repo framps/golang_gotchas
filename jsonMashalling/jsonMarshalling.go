@@ -141,3 +141,40 @@ func main() {
 	fmt.Printf("%s: %+v\n", "SimpleStructListBlob", *simpleStructList)
 
 }
+
+// Execution result:
+
+/*
+framp@obelix:~/go/src/github.com/framps/golang_gotchas/jsonMashalling (master)$ go run jsonMarshalling.go
+--------------- Go struct to JSON (Marshal) ----------------
+
+SimpleStruct: {
+   "Name": "Foo",
+   "Value": "Bar"
+}
+SimpleStructArray: [
+   {
+      "Name": "Foo1",
+      "Value": "Bar1"
+   },
+   {
+      "Name": "Foo2",
+      "Value": "Bar2"
+   }
+]
+SimpleStructList: {
+   "Element1": {
+      "Name": "Foo1",
+      "Value": "Bar1"
+   },
+   "Element2": {
+      "Name": "Foo2",
+      "Value": "Bar2"
+   }
+}
+--------------- JSON to GO struct (Unmarshal) ----------------
+
+SimpleStructBlob: {Name:Foo Value:Bar}
+SimpleStructArrayBlob: [{Name:Foo1 Value:Bar2} {Name:Foo2 Value:Bar2}]
+SimpleStructListBlob: map[Element1:{Name:Foo1 Value:Bar2} Element2:{Name:Foo2 Value:Bar2}]
+*/
