@@ -1,6 +1,6 @@
 {
   "hello_world": {
-    "other": "Hallo Welt"
+    "other": "Hallo Welt {{.Person}}! Wie geht es Dir?"
   },
   "settings_title": {
     "other": "Einstellungen"

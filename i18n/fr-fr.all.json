@@ -1,8 +1,8 @@
 {
   "hello_world": {
-    "other": "Bon jour monde"
+    "other": "Hello world {{.Person}}! How are you"
   },
   "settings_title": {
-    "other": "Complication"
+    "other": "Settings"
   }
 }
