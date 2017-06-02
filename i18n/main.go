@@ -11,17 +11,25 @@ func main() {
 	i18n.MustLoadTranslationFile("en-us.all.json")
 	i18n.MustLoadTranslationFile("de-de.all.json")
 	i18n.MustLoadTranslationFile("fr-fr.all.json")
+	i18n.MustLoadTranslationFile("zh.all.json")
 
-	T, _ := i18n.Tfunc("de-DE")
-	fmt.Printf("I18N text: %s\n", T("settings_title"))
-	fmt.Printf("I18N hello: %s\n", T("hello_world"))
+	const defaultLocale = "en-US"
 
-	T, _ = i18n.Tfunc("fr-FR")
-	fmt.Printf("I18N text: %s\n", T("settings_title"))
-	fmt.Printf("I18N hello: %s\n", T("hello_world"))
+	var locales = []struct {
+		loc string
+	}{
+		{"en-US"},
+		{"de-DE"},
+		{"fr-FR"},
+		{"ar-AR"},
+		{"zh"},
+	}
 
-	T, _ = i18n.Tfunc("en-US")
-	fmt.Printf("I18N text: %s\n", T("settings_title"))
-	fmt.Printf("I18N hello: %s\n", T("hello_world"))
+	for _, l := range locales {
 
+		fmt.Printf("*** Locale %s\n", l.loc)
+		T, _ := i18n.Tfunc(l.loc, defaultLocale)
+		fmt.Printf(T("settings_title") + "\n")
+		fmt.Printf("%s\n", T("hello_world", map[string]interface{}{"Person": "framp"}))
+	}
 }
