@@ -9,15 +9,25 @@ import (
 )
 
 // matcher is a language.Matcher configured for all supported languages.
-var matcher = language.NewMatcher([]language.Tag{
-	language.Make("en-GB"),
+var matcher1 = language.NewMatcher([]language.Tag{
 	language.BritishEnglish,
 	language.Norwegian,
 	language.German,
 })
 
+var matcher2 = dynamicMatcher([]string{"fr-FR", "no", "de"})
+
+func dynamicMatcher(languages []string) language.Matcher {
+	t := make([]language.Tag, len(languages))
+	for _, l := range languages {
+		t = append(t, language.Make(l))
+	}
+	m := language.NewMatcher(t)
+	return m
+}
+
 // handler is a http.HandlerFunc.
-func handler(w http.ResponseWriter, r *http.Request) {
+func handler(w http.ResponseWriter, r *http.Request, matcher language.Matcher) {
 	t, q, err := language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
 	// We ignore the error: the default language will be selected for t == nil.
 	tag, _, _ := matcher.Match(t...)
@@ -32,9 +42,12 @@ func main() {
 		"invalid",
 	} {
 		// Create dummy request with Accept-Language set and pass it to handler.
-		r, _ := http.NewRequest("GET", "example.com", strings.NewReader("Hello"))
-		r.Header.Set("Accept-Language", al)
-		handler(nil, r)
+
+		for _, m := range []language.Matcher{matcher1, matcher2} {
+			r, _ := http.NewRequest("GET", "example.com", strings.NewReader("Hello"))
+			r.Header.Set("Accept-Language", al)
+			handler(nil, r, m)
+		}
 	}
 
 }
