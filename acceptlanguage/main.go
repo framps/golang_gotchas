@@ -15,10 +15,10 @@ var matcher1 = language.NewMatcher([]language.Tag{
 	language.German,
 })
 
-var matcher2 = dynamicMatcher([]string{"fr-FR", "no", "de"})
+var matcher2 = dynamicMatcher([]string{"en-GB", "no", "de"})
 
 func dynamicMatcher(languages []string) language.Matcher {
-	t := make([]language.Tag, len(languages))
+	t := make([]language.Tag, 0, len(languages))
 	for _, l := range languages {
 		t = append(t, language.Make(l))
 	}
@@ -35,19 +35,21 @@ func handler(w http.ResponseWriter, r *http.Request, matcher language.Matcher) {
 }
 
 func main() {
-	for _, al := range []string{
-		"nn;q=0.3, en-us;q=0.8, en,",
-		"gsw, en;q=0.7, en-US;q=0.8",
-		"gsw, nl, da",
-		"invalid",
-	} {
-		// Create dummy request with Accept-Language set and pass it to handler.
 
-		for _, m := range []language.Matcher{matcher1, matcher2} {
+	for _, m := range []language.Matcher{matcher1, matcher2} {
+		for _, al := range []string{
+			"nn;q=0.3, en-us;q=0.8, en,",
+			"gsw, en;q=0.7, en-US;q=0.8",
+			"gsw, nl, da",
+			"invalid",
+		} {
+			// Create dummy request with Accept-Language set and pass it to handler.
+
 			r, _ := http.NewRequest("GET", "example.com", strings.NewReader("Hello"))
 			r.Header.Set("Accept-Language", al)
 			handler(nil, r, m)
 		}
+		fmt.Println()
 	}
 
 }
