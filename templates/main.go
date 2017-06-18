@@ -1,5 +1,9 @@
 package main
 
+// Use golang templates
+//
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 import (
 	"bytes"
 	"fmt"

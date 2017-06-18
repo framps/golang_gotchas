@@ -1,5 +1,9 @@
 package main
 
+// Insert log statements in code using go.uber.org/zap
+//
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 import (
 	"fmt"
 

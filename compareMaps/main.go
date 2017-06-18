@@ -9,6 +9,8 @@ package main
 // in the map will return the zero value for the type of the entries in the map.
 // For instance, if the map contains integers, looking up a non-existent key will return 0."
 
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 import "fmt"
 
 func equal(x, y map[string]int, wrongTest bool) bool {

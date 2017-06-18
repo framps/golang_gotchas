@@ -1,5 +1,9 @@
 package main
 
+// Globalize message by using github.com/nicksnyder/go-i18n/i18n
+//
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 import (
 	"fmt"
 

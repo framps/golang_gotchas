@@ -1,5 +1,9 @@
 package main
 
+// Select the appropriate language for HTTP Accept-Header using golang.org/x/text/language
+//
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 import (
 	"fmt"
 	"net/http"
