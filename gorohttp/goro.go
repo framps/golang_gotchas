@@ -56,8 +56,10 @@ func getResponses(rc chan Resp) int {
 }
 
 func main() {
-	reqs := 100000
-	maxConcurrent := 1000
+	// reqs := 10000
+	reqs := 10
+	// maxConcurrent := 1000
+	maxConcurrent := 10
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	rc := make(chan Resp)
 	sem := make(chan bool, maxConcurrent)
