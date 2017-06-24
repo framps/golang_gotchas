@@ -7,6 +7,14 @@ type User struct {
 	Name string
 }
 
+// Modify -
+func Modify(u *User) *User {
+	if u.Name != "Paul" {
+		return &User{Name: "Paul"}
+	}
+	return u
+}
+
 func hasChanged(u User) {
 	if u.Name != "Leto" {
 		fmt.Printf("!!! Name changed to %s\n", u.Name)
@@ -77,6 +85,12 @@ func main() {
 	// Name changed, address to user passed and contents (name) will be changed, no new user will be returned
 	// y -> User, &y is passed by valued and y' -> User and User Name can be modified
 
+	z := &User{Name: "Leto"}
+	fmt.Printf("Passing z as Pointer:\nType: %T: \tAddress: %p \tValue: %v\n", z, &z, z)
+	z = Modify(z)
+	hasChanged(*z)
+	// Name changed, either old z -> User or z' -> NewUser is returned
+
 }
 
 /* Run result:
@@ -105,6 +119,9 @@ Passing u as value:
 Type: main.User: 	Address: 0xc42000a4c0 	Value: {Leto}
 Receiving u as pointer
 Type: *main.User: 	Address: 0xc42002c058 	Value: &{Leto}
+!!! Name changed to Paul
+Passing z as Pointer:
+Type: *main.User: 	Address: 0xc420086058 	Value: &{Leto}
 !!! Name changed to Paul
 
 */
