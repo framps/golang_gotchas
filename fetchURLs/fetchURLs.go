@@ -30,6 +30,7 @@ import (
 	"time"
 )
 
+// collect statistics per url
 type urlStatistics struct {
 	url   string
 	count int
@@ -52,11 +53,12 @@ func fetch(url string, ch chan<- urlStatistics, threads int, sleep time.Duration
 	stats := urlStatistics{url: url}
 
 	info("fetching %s\n", url)
-	var wg sync.WaitGroup
 
+	var wg sync.WaitGroup
 	wg.Add(threads)
+
 	for i := 0; i < threads; i++ {
-		go func(i int) {
+		go func(i int) { // i has to be passed, otherwise it will be #threads all the time because i is shared by threads
 			info("Starting %d: %s\n", i, url)
 
 			var (
@@ -65,6 +67,8 @@ func fetch(url string, ch chan<- urlStatistics, threads int, sleep time.Duration
 
 			for i := 0; i < loops; i++ {
 				start := time.Now()
+
+				// kick off a GET request
 				resp, err := http.Get(url)
 				if err != nil {
 					panic(err)
@@ -74,13 +78,16 @@ func fetch(url string, ch chan<- urlStatistics, threads int, sleep time.Duration
 				if err != nil {
 					panic(err)
 				}
+
+				// GET request finished, calculate statistics
+
 				secs := time.Since(start).Seconds()
 				info("%d: %s - %.2fs  %7d\n", i, url, secs, nbytes)
 
 				stats.count++
 				if stats.min == nil {
 					min = secs
-					stats.min = &min
+					stats.min = &min // don't use &secs because then stats.min and stats.max will be identical all the time
 				} else if secs < *stats.min {
 					min = secs
 				}
@@ -92,11 +99,13 @@ func fetch(url string, ch chan<- urlStatistics, threads int, sleep time.Duration
 				}
 				stats.sum += secs
 
+				// throttle requests
+
 				time.Sleep(sleep)
 			}
 			info("Done %d: %s\n", i, stats.url)
 			wg.Done()
-		}(i)
+		}(i) // see comment above
 	}
 	wg.Wait()
 	stats.avg = stats.sum / float64(stats.count)
@@ -104,6 +113,8 @@ func fetch(url string, ch chan<- urlStatistics, threads int, sleep time.Duration
 }
 
 func main() {
+
+	// parse invocation parms
 
 	threads := flag.Int("threads", 3, "Number of threads per URL")
 	sleep := flag.Duration("sleep", 1000*time.Millisecond, "Number of milliseconds to sleep between url requests")
@@ -123,11 +134,13 @@ func main() {
 
 	urls := strings.Split(*urlList, " ")
 
+	// kick off fetch threads per url
 	for _, url := range urls {
 		info("Starting to poll %s\n", url)
 		go fetch(url, ch, *threads, *sleep, *loops)
 	}
 
+	// wait for threads to terminate and print stats
 	var sumRequests int
 	for i := 0; i < len(urls); i++ {
 		s := <-ch
@@ -135,6 +148,7 @@ func main() {
 		sumRequests += s.count
 	}
 
+	// report some interesting performance stats
 	elapsed := time.Since(start).Seconds()
 	avgTimePerRequest := elapsed / float64(sumRequests)
 	fmt.Printf("%.2fs elapsed, Avg time per request: %.2fs\n", elapsed, avgTimePerRequest)
