@@ -6,6 +6,8 @@ package main
 // 2) GO struct array -> JSON and JSON string -> struct array
 // 3) GO struct list -> JSON and JSON string -> struct list
 //
+// See github.com/framps/golang_gotchas for latest code
+//
 // Copyright (C) 2017 framp at linux-tips-and-tricks dot de
 
 import (

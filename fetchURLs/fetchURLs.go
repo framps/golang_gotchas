@@ -16,6 +16,8 @@ package main
 //
 // Example: go run fetchURLs.go -urls "http://www.cnn.com https://www.thesun.co.uk/" -sleep 1ms -threads 100 -loops 10
 //
+// See github.com/framps/golang_gotchas for latest code
+//
 // Copyright (C) 2017 framp at linux-tips-and-tricks dot de
 
 import (

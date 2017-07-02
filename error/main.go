@@ -1,5 +1,11 @@
 package main
 
+// Sample how mashalling of errors works
+//
+// See github.com/framps/golang_gotchas for latest code
+//
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 import (
 	"encoding/json"
 	"fmt"

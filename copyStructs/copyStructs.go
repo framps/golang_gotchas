@@ -3,6 +3,8 @@ package main
 // Copy structs by using github.com/jinzhu/copier
 //
 // Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+//
+// See github.com/framps/golang_gotchas for latest code
 
 import (
 	"fmt"
