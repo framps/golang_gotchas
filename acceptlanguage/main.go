@@ -49,6 +49,10 @@ func main() {
 	for _, m := range []language.Matcher{matcher1, matcher2, matcher3} {
 		for _, al := range []string{
 			"de-AT,en;q=0.7,fr;q=0.3",
+			"de-AT,en;q=0.7",
+			"de-AT,en",
+			"de-AT,fr",
+			"de-AT",
 			"nn;q=0.3, en-us;q=0.8, en,",
 			"gsw, en;q=0.7, en-US;q=0.8",
 			"gsw, nl, da",
