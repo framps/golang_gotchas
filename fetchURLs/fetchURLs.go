@@ -117,7 +117,7 @@ func main() {
 	// parse invocation parms
 
 	threads := flag.Int("threads", 3, "Number of threads per URL")
-	sleep := flag.Duration("sleep", 1000*time.Millisecond, "Number of milliseconds to sleep between url requests")
+	sleep := flag.Duration("sleep", 1000*time.Millisecond, "Time to sleep between url requests in loop")
 	loops := flag.Int("loops", 3, "Request loops per url thread")
 	flag.BoolVar(&verbose, "verbose", false, "verbose logging")
 	urlList := flag.String("urls", "http://www.google.de", "urls to send requests to")
