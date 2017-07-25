@@ -62,6 +62,7 @@ func main() {
 
 	rand.Seed(time.Now().UTC().UnixNano())
 
+	fmt.Printf("Starting %d goroutines\n", goRoutines)
 	for i := 0; i < goRoutines; i++ {
 		wg.Add(1)
 		go juggle(i)
@@ -85,8 +86,18 @@ func main() {
 
 	go func(done chan bool) {
 		fmt.Println("Waiting for all goroutines to terminate")
+		var d bool
 		wg.Wait() // blocking
-		fmt.Println("All goroutines terminated")
+
+		select { // check if chan already closed
+		case <-done:
+			d = true
+		default:
+		}
+
+		if !d { // finish quietly if already gracefully shutdown
+			fmt.Println("All goroutines terminated")
+		}
 		done <- true
 	}(done)
 
