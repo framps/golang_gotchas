@@ -8,6 +8,8 @@ Anything what I didn't know about golang and is somehow special to golang
 5. jsonMarshalling - Print the different marshal/unmarshal results of different structures into/from JSON
 6. logging - Sample code using go.uber.org/zap to log code execution
 7. pollURLs - Golang pollURL sample code
-8. templates - Sample code using golang /text/template
-9. utils
+8. sigTerm - Catch SIGTERM or SIGINT to gracefully shutdown program
+9. templates - Sample code using golang /text/template
+10. utils
     1. json.go - pretty print JSON
+11. waitGroupTimeout - Sample which implements a waitGroup which can timeout

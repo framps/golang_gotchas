@@ -70,30 +70,29 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
 
-	// signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigs
+	go func(done chan bool) {
+		sig := <-sigs // blocking
 		switch sig {
 		case syscall.SIGTERM:
-			fmt.Println("SIGTERM received")
+			fmt.Println("SIGTERM received") // kill
+		case syscall.SIGINT:
+			fmt.Println("\nSIGINT received") // CTRL-C
 		}
-		fmt.Println("Awaiting SIGTERM")
-		signal.Ignore(syscall.SIGINT, syscall.SIGTERM)
 		done <- true
-	}()
+	}(done)
 
 	go func(done chan bool) {
 		fmt.Println("Waiting for all goroutines to terminate")
-		wg.Wait()
+		wg.Wait() // blocking
+		fmt.Println("All goroutines terminated")
 		done <- true
 	}(done)
 
 	<-done
 	fmt.Println("Graceful shutdown and waiting to goroutines to terminate")
-	wg.Wait()
+	wg.Wait() //blocking
 	fmt.Println("Exiting")
 
 }
