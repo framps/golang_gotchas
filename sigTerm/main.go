@@ -86,23 +86,19 @@ func main() {
 
 	go func(done chan bool) {
 		fmt.Println("Waiting for all goroutines to terminate")
-		var d bool
 		wg.Wait() // blocking
 
-		select { // check if chan already closed
-		case <-done:
-			d = true
-		default:
-		}
-
-		if !d { // finish quietly if already gracefully shutdown
+		// if chan already closed suppress message
+		select {
+		case <-done: // chan still open
 			fmt.Println("All goroutines terminated")
+		default:
 		}
 		done <- true
 	}(done)
 
 	<-done
-	fmt.Println("Graceful shutdown and waiting to goroutines to terminate")
+	fmt.Println("Graceful shutdown and waiting for goroutines to terminate")
 	wg.Wait() //blocking
 	fmt.Println("Exiting")
 
