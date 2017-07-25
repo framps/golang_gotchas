@@ -1,3 +1,9 @@
+// Listen on sigterm and gracefully shutdown.
+//
+// See github.com/framps/golang_gotchas for latest code
+//
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 package main
 
 import (
@@ -14,6 +20,7 @@ const (
 	goRoutines      = 100
 	exitProbability = 0.5
 	delay           = time.Second
+	debug           = false
 )
 
 type counter struct {
@@ -36,13 +43,17 @@ func juggle(id int) {
 		r := rand.Float32()
 
 		if r < exitProbability {
-			fmt.Printf("(%d) - Exiting: %d\n", count.counter, id)
+			if debug {
+				fmt.Printf("(%d) - Exiting: %d\n", count.counter, id)
+			}
 			count.mutex.Lock()
 			count.counter--
 			count.mutex.Unlock()
 			return
 		}
-		fmt.Printf("(%d) - Sleeping: %d\n", count.counter, id)
+		if debug {
+			fmt.Printf("(%d) - Sleeping: %d\n", count.counter, id)
+		}
 		time.Sleep(delay)
 	}
 }
@@ -61,19 +72,15 @@ func main() {
 
 	// signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	signal.Notify(sigs, os.Interrupt)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		sig := <-sigs
-		fmt.Println()
-		fmt.Println(sig)
 		switch sig {
-		case syscall.SIGINT:
-			fmt.Println("SIGINT")
 		case syscall.SIGTERM:
-			fmt.Println("SIGTERM")
+			fmt.Println("SIGTERM received")
 		}
-		fmt.Println("awaiting signal")
+		fmt.Println("Awaiting SIGTERM")
 		signal.Ignore(syscall.SIGINT, syscall.SIGTERM)
 		done <- true
 	}()
@@ -85,8 +92,8 @@ func main() {
 	}(done)
 
 	<-done
-	fmt.Println("Waiting for all goroutines to terminate")
+	fmt.Println("Graceful shutdown and waiting to goroutines to terminate")
 	wg.Wait()
-	fmt.Println("exiting")
+	fmt.Println("Exiting")
 
 }
