@@ -1,5 +1,14 @@
 package main
 
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+//
+// Sample how to use timeouts in a httpClient
+//
+// See github.com/framps/golang_gotchas for latest code
+//
+// This code is based and was enhanced
+// from sample code http://speakmy.name/2014/07/29/http-request-debugging-in-go/
+
 import (
 	"fmt"
 	"net/http"

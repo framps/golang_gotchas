@@ -1,6 +1,6 @@
 package main
 
-// A common error using pointers in golang
+// Sample code for a common error using pointers in golang when you are used to use C or C++
 //
 // This sample code is based on http://openmymind.net/Things-I-Wish-Someone-Had-Told-Me-About-Go/
 //

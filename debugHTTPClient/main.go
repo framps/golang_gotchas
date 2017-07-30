@@ -2,7 +2,7 @@ package main
 
 // Copyright (C) 2017 framp at linux-tips-and-tricks dot de
 //
-// Sample how to debug http client by using io/ioutil.
+// Sample how to debug http client by using io/ioutil and httputil
 // Use param -debug to enable http client debugging
 //
 // See github.com/framps/golang_gotchas for latest code

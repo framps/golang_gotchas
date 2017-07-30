@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Resp -
+// Resph -
 type Resp struct {
 	*http.Response
 	err error
