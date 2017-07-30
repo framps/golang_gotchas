@@ -1,27 +1,47 @@
 package main
 
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+//
+// Sample how to kick off http requests as fast as possible
+//
+// See github.com/framps/golang_gotchas for latest code
+//
+// This code is based and was enhanced
 // see http://stackoverflow.com/questions/23318419/how-can-i-effectively-max-out-concurrent-http-requests
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"runtime"
 	"time"
 )
 
-// Resph -
+var (
+	reqs int
+	max  int
+)
+
+func init() {
+	flag.IntVar(&reqs, "reqs", 1000, "Total requests")
+	flag.IntVar(&max, "concurrent", 200, "Maximum concurrent requests")
+}
+
+// Resp -
 type Resp struct {
 	*http.Response
 	err error
 }
 
-func makeResponses(reqs int, rc chan Resp, sem chan bool) {
+func makeResponses(url string, reqs int, rc chan Resp, sem chan bool) {
 	defer close(rc)
 	defer close(sem)
 	for reqs > 0 {
 		select {
 		case sem <- true:
-			req, _ := http.NewRequest("GET", "http://localhost:/", nil)
+			req, _ := http.NewRequest("GET", url, nil)
 			transport := &http.Transport{}
 			resp, err := transport.RoundTrip(req)
 			r := Resp{resp, err}
@@ -56,15 +76,23 @@ func getResponses(rc chan Resp) int {
 }
 
 func main() {
-	// reqs := 10000
-	reqs := 10
-	// maxConcurrent := 1000
-	maxConcurrent := 10
+
+	flag.Parse()
+	fmt.Printf("Starting local server ...\n")
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//		fmt.Println("*")
+	}))
+	srv.Config.SetKeepAlivesEnabled(false)
+	defer srv.Close()
+
+	u, _ := url.Parse(srv.URL)
+
+	fmt.Printf("Starting %d max concurrent requests of %d on %d procs ...\n", max, reqs, runtime.NumCPU())
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	rc := make(chan Resp)
-	sem := make(chan bool, maxConcurrent)
+	sem := make(chan bool, max)
 	start := time.Now()
-	go makeResponses(reqs, rc, sem)
+	go makeResponses(u.String(), reqs, rc, sem)
 	conns := getResponses(rc)
 	end := time.Since(start)
 	fmt.Printf("Connections: %d\nTotal time: %s\n", conns, end)
