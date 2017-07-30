@@ -12,11 +12,10 @@ import (
 // Dispatcher -
 type Dispatcher struct {
 	Tasks         map[int]*task.Task
-	WorkerChan    chan *worker.Worker
+	WorkerChan    chan *worker.Worker // free workers
+	Workers       []*worker.Worker
 	workerReadywg sync.WaitGroup
 	workerBusyWg  sync.WaitGroup
-	Workers       []*worker.Worker
-	Wg            sync.WaitGroup
 	mutex         sync.Mutex
 }
 
@@ -35,7 +34,6 @@ func (d *Dispatcher) TaskAdd(task *task.Task) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	d.Tasks[task.ID] = task
-	d.Wg.Add(1)
 }
 
 // WorkerAdd -
