@@ -25,6 +25,7 @@ func main() {
 
 	utils.Logln("Starting http server ...")
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("*\n")
 	}))
 	defer svr.Close()
 

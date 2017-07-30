@@ -12,7 +12,7 @@ import (
 // Worker which processes a http work request
 type Worker struct {
 	ID           int
-	Client       http.Client
+	Client       *http.Client
 	TaskChan     chan *task.Task
 	FinishedWork int
 }
@@ -21,6 +21,8 @@ type Worker struct {
 func NewWorker(id int) *Worker {
 	w := &Worker{ID: id}
 	w.TaskChan = make(chan *task.Task)
+
+	w.Client = &http.Client{}
 	utils.Log("Created worker %d \n", w.ID)
 	return w
 }
@@ -36,6 +38,11 @@ func (w *Worker) Run(workerChan chan *Worker, workerReadyWg *sync.WaitGroup, wor
 			workerBusyWg.Add(1)
 			t := <-w.TaskChan
 			utils.Log("Worker %d: Processing %v\n", w.ID, t)
+			rsp, err := w.Client.Get(t.URL)
+			if err != nil {
+				panic(err)
+			}
+			rsp.Body.Close()
 			w.FinishedWork++
 			workerBusyWg.Done()
 		}
