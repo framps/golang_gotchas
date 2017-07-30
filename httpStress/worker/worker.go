@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	task "github.com/framps/golang_gotchas/httpStress/task.go"
+	"github.com/framps/golang_gotchas/httpStress/utils"
 )
 
 // Worker which processes a http work request
@@ -20,21 +21,23 @@ type Worker struct {
 func NewWorker(id int) *Worker {
 	w := &Worker{ID: id}
 	w.TaskChan = make(chan *task.Task)
-	fmt.Printf("Created worker %d \n", w.ID)
+	utils.Log("Created worker %d \n", w.ID)
 	return w
 }
 
 // Run -
-func (w *Worker) Run(workerChan chan *Worker, workerReadyWg *sync.WaitGroup) {
+func (w *Worker) Run(workerChan chan *Worker, workerReadyWg *sync.WaitGroup, workerBusyWg *sync.WaitGroup) {
 	workerReadyWg.Done()
 	go func() {
 		for {
-			fmt.Printf("Worker %d: Ready for work\n", w.ID)
+			utils.Log("Worker %d: Ready for work\n", w.ID)
 			workerChan <- w
-			fmt.Printf("Worker %d: Waiting for work\n", w.ID)
+			utils.Log("Worker %d: Waiting for work\n", w.ID)
+			workerBusyWg.Add(1)
 			t := <-w.TaskChan
-			fmt.Printf("Worker %d: Processing %v\n", w.ID, t)
+			utils.Log("Worker %d: Processing %v\n", w.ID, t)
 			w.FinishedWork++
+			workerBusyWg.Done()
 		}
 	}()
 }
