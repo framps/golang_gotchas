@@ -13,14 +13,14 @@ import (
 type Worker struct {
 	ID           int
 	Client       *http.Client
-	TaskChan     chan *task.Task
+	TaskChan     chan task.WorkerTask
 	FinishedWork int
 }
 
 // NewWorker -
 func NewWorker(id int) *Worker {
 	w := &Worker{ID: id}
-	w.TaskChan = make(chan *task.Task)
+	w.TaskChan = make(chan task.WorkerTask)
 
 	w.Client = &http.Client{}
 	utils.Log("Created worker %d \n", w.ID)
@@ -38,11 +38,10 @@ func (w *Worker) Run(workerChan chan *Worker, workerReadyWg *sync.WaitGroup, wor
 			workerBusyWg.Add(1)
 			t := <-w.TaskChan
 			utils.Log("Worker %d: Processing %v\n", w.ID, t)
-			rsp, err := w.Client.Get(t.URL)
-			if err != nil {
-				panic(err)
+			t.Receive(w.Client)
+			if t.IsSyncRequest() {
+				t.PostProcess()
 			}
-			rsp.Body.Close()
 			w.FinishedWork++
 			workerBusyWg.Done()
 		}
