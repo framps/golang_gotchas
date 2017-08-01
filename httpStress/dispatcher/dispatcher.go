@@ -43,7 +43,7 @@ func (d *Dispatcher) WorkerAdd(worker *worker.Worker) {
 	worker.Run(d.WorkerChan, &d.workerReadywg, &d.workerBusyWg)
 }
 
-// Wait -
+// Wait until no more workers are busy
 func (d *Dispatcher) Wait() {
 	d.workerBusyWg.Wait()
 }
@@ -59,7 +59,7 @@ func (d *Dispatcher) Run() {
 	}
 }
 
-// Trigger -
+// Trigger - wait until all workers are ready for work
 func (d *Dispatcher) Trigger() {
 	utils.Log("Dispatcher: Waiting for worker to become ready\n")
 	d.workerReadywg.Wait()

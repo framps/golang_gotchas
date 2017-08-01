@@ -8,12 +8,14 @@ import (
 
 var taskID int
 
+// WorkerTask -
 type WorkerTask interface {
-	Receive(client *http.Client) // receive http request
-	PostProcess()                // process received request if sync request
+	Receive(client *http.Client) int // receive http request
+	PostProcess()                    // process received request if sync request
 	IsSyncRequest() bool
 }
 
+// SimpleWorkerTask - Just a simple http get
 type SimpleWorkerTask struct {
 	Task
 }
@@ -37,7 +39,8 @@ func (t *Task) String() string {
 	return fmt.Sprintf("Task %d: %s %s", t.ID, t.Request, t.URL)
 }
 
-func (t *Task) Receive(client *http.Client) {
+// Receive -
+func (t *Task) Receive(client *http.Client) int {
 	rsp, err := client.Get(t.URL)
 	if err != nil {
 		panic(err)
@@ -47,12 +50,15 @@ func (t *Task) Receive(client *http.Client) {
 		panic(err)
 	}
 	rsp.Body.Close()
+	return rsp.StatusCode
 }
 
+// PostProcess -
 func (t *Task) PostProcess() {
-	fmt.Printf("Response: %s\n", t.Response)
+	// fmt.Printf("Response: %s\n", t.Response[:32])
 }
 
+// IsSyncRequest -
 func (t *Task) IsSyncRequest() bool {
 	return t.wait
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,15 +12,14 @@ import (
 	"github.com/framps/golang_gotchas/httpStress/worker"
 )
 
-const (
-	workers = 3
-	tasks   = 10
-	debug   = true
-)
-
 func main() {
 
-	if debug {
+	workers := flag.Int("w", 3, "Number of workers")
+	tasks := flag.Int("t", 3, "Number of tasks")
+	debug := flag.Bool("d", false, "Debug enabled")
+	flag.Parse()
+
+	if *debug {
 		utils.LogEnable()
 	}
 
@@ -32,13 +32,14 @@ func main() {
 	dispatcher := dispatcher.NewDispatcher()
 
 	utils.Log("Loading dispatcher with %d workers\n", workers)
-	for i := 0; i < workers; i++ {
+	for i := 0; i < *workers; i++ {
 		dispatcher.WorkerAdd(worker.NewWorker(i))
 	}
 
 	utils.Log("Loading dispatcher with %d tasks\n", tasks)
-	for i := 0; i < tasks; i++ {
-		t := task.NewTask(svr.URL, "GET", true)
+	for i := 0; i < *tasks; i++ {
+		//t := task.NewTask(svr.URL, "GET", true)
+		t := task.NewTask("http://www.linux-tips-and-tricks.de", "GET", true)
 		dispatcher.TaskAdd(t)
 	}
 

@@ -4,17 +4,30 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	task "github.com/framps/golang_gotchas/httpStress/task.go"
 	"github.com/framps/golang_gotchas/httpStress/utils"
 )
 
+// Statistics -
+
+// Statistics -
+type Statistics struct {
+	SumDuration time.Duration
+	Requests    int
+	rc200       int
+	rc300       int
+	rc400       int
+	rc500       int
+}
+
 // Worker which processes a http work request
 type Worker struct {
-	ID           int
-	Client       *http.Client
-	TaskChan     chan task.WorkerTask
-	FinishedWork int
+	ID        int
+	Client    *http.Client
+	TaskChan  chan task.WorkerTask
+	Statistic Statistics
 }
 
 // NewWorker -
@@ -38,11 +51,24 @@ func (w *Worker) Run(workerChan chan *Worker, workerReadyWg *sync.WaitGroup, wor
 			workerBusyWg.Add(1)
 			t := <-w.TaskChan
 			utils.Log("Worker %d: Processing %v\n", w.ID, t)
-			t.Receive(w.Client)
+			requestStart := time.Now()
+			statusCode := t.Receive(w.Client)
 			if t.IsSyncRequest() {
 				t.PostProcess()
+				switch {
+				case statusCode >= 200 && statusCode < 300:
+					w.Statistic.rc200++
+				case statusCode >= 300 && statusCode < 400:
+					w.Statistic.rc300++
+				case statusCode >= 400 && statusCode < 400:
+					w.Statistic.rc400++
+				case statusCode >= 500 && statusCode < 500:
+					w.Statistic.rc500++
+				}
 			}
-			w.FinishedWork++
+			requestDuration := time.Since(requestStart)
+			w.Statistic.SumDuration += requestDuration
+			w.Statistic.Requests++
 			workerBusyWg.Done()
 		}
 	}()
@@ -50,5 +76,18 @@ func (w *Worker) Run(workerChan chan *Worker, workerReadyWg *sync.WaitGroup, wor
 
 // Statistics -
 func (w *Worker) Statistics() string {
-	return fmt.Sprintf("Worker %d: FinishedWork: %d", w.ID, w.FinishedWork)
+	d := float64(0)
+	if w.Statistic.Requests > 0 {
+		d = w.Statistic.SumDuration.Seconds() / float64(w.Statistic.Requests)
+	}
+
+	return fmt.Sprintf("Worker %3d: n: %5d (#) duration avg: %3.3f (s)\n2xx: %d - 3xx: %d - 4xx: %d - 5xx: %d",
+		w.ID,
+		w.Statistic.Requests,
+		d,
+		w.Statistic.rc200,
+		w.Statistic.rc300,
+		w.Statistic.rc400,
+		w.Statistic.rc500,
+	)
 }
