@@ -38,14 +38,13 @@ func main() {
 
 	utils.Log("Loading dispatcher with %d tasks\n", tasks)
 	for i := 0; i < *tasks; i++ {
-		//t := task.NewTask(svr.URL, "GET", true)
-		t := task.NewTask("http://www.linux-tips-and-tricks.de", "GET", true)
+		t := task.NewTask(svr.URL, "GET", true)
 		dispatcher.TaskAdd(t)
 	}
 
 	utils.Log("Waiting for all workers to become ready for work\n")
 	dispatcher.Trigger()
-	fmt.Printf("Starting to work\n")
+	fmt.Printf("Dispatching work\n")
 
 	dispatcher.Run()
 	fmt.Printf("Waiting for work to complete\n")
