@@ -1,6 +1,6 @@
 package broadcast
 
-import "github.com/framps/golang_gotchas/boadcastChan/utils"
+import "github.com/framps/golang_gotchas/broadcastChan/utils"
 
 type broadcast struct {
 	c chan broadcast
@@ -9,18 +9,20 @@ type broadcast struct {
 
 type broadcastChannel chan (chan broadcast)
 
+// Broadcaster -
 type Broadcaster struct {
 	// private fields:
 	Listenc chan broadcastChannel
 	Sendc   chan<- interface{}
 }
 
+// Receiver -
 type Receiver struct {
 	// private fields:
 	C chan broadcast
 }
 
-// create a new broadcaster object.
+// NewBroadcaster - create a new broadcaster object.
 func NewBroadcaster() Broadcaster {
 	listenc := make(chan broadcastChannel)
 	sendc := make(chan interface{})
@@ -33,6 +35,7 @@ func NewBroadcaster() Broadcaster {
 			case v := <-sendc:
 				utils.Debugln("Send received")
 				if v == nil {
+					utils.Debugln("Nil received")
 					currc <- broadcast{}
 					return
 				}
@@ -53,7 +56,7 @@ func NewBroadcaster() Broadcaster {
 	}
 }
 
-// start listening to the broadcasts.
+// Listen - start listening to the broadcasts.
 func (b Broadcaster) Listen() Receiver {
 	utils.Debugln("Listening")
 	c := make(broadcastChannel, 0)
@@ -62,7 +65,7 @@ func (b Broadcaster) Listen() Receiver {
 	return Receiver{<-c}
 }
 
-// broadcast a value to all listeners.
+// Write - broadcast a value to all listeners.
 func (b Broadcaster) Write(v interface{}) {
 	utils.Debugf("Sending %v\n", v)
 	b.Sendc <- v
