@@ -1,6 +1,6 @@
 package broadcast
 
-import "github.com/framps/golang_gotchas/boadcastChan/utils"
+import "github.com/framps/golang_gotchas/broadcastChan/utils"
 
 type broadcast struct {
 	c chan broadcast
@@ -11,19 +11,19 @@ type broadcastChannel chan (chan broadcast)
 
 type Broadcaster struct {
 	// private fields:
-	Listenc chan broadcastChannel
-	Sendc   chan<- interface{}
+	Listenc chan broadcastChannel // listenerchannel
+	Sendc   chan<- interface{}    // send channel
 }
 
 type Receiver struct {
 	// private fields:
-	C chan broadcast
+	C chan broadcast // a receiver has a broadcast channel
 }
 
 // create a new broadcaster object.
 func NewBroadcaster() Broadcaster {
-	listenc := make(chan broadcastChannel)
-	sendc := make(chan interface{})
+	listenc := make(chan broadcastChannel) // listenerchannel which receives a broadcast channel
+	sendc := make(chan interface{})        // send channel
 	go func() {
 		utils.Debugln("Starting broadcaster gofunc")
 		currc := make(chan broadcast, 1)
@@ -33,11 +33,11 @@ func NewBroadcaster() Broadcaster {
 			case v := <-sendc:
 				utils.Debugln("Send received")
 				if v == nil {
-					currc <- broadcast{}
+					currc <- broadcast{} // send empty broadcast
 					return
 				}
-				c := make(chan broadcast, 1)
-				b := broadcast{c: c, v: v}
+				c := make(chan broadcast, 1) // create new broadcast channel
+				b := broadcast{c: c, v: v}   // insert broadcast channel and value in new broadcast
 				currc <- b
 				currc = c
 			case r := <-listenc:
@@ -56,25 +56,25 @@ func NewBroadcaster() Broadcaster {
 // start listening to the broadcasts.
 func (b Broadcaster) Listen() Receiver {
 	utils.Debugln("Listening")
-	c := make(broadcastChannel, 0)
-	b.Listenc <- c
+	c := make(broadcastChannel, 0) // create a broadcastchannel
+	b.Listenc <- c                 // write new broadcastchannel on listener channel
 	utils.Debugln("Returning")
-	return Receiver{<-c}
+	return Receiver{<-c} // return receiver when broadcastchannel received
 }
 
 // broadcast a value to all listeners.
 func (b Broadcaster) Write(v interface{}) {
 	utils.Debugf("Sending %v\n", v)
-	b.Sendc <- v
+	b.Sendc <- v // write value on send channel
 }
 
 // read a value that has been broadcast,
 // waiting until one is available if necessary.
 func (r *Receiver) Read() interface{} {
 	utils.Debugln("Reading")
-	b := <-r.C
-	v := b.v
-	r.C <- b
-	r.C = b.c
-	return v
+	b := <-r.C // wait for a broadast channel
+	v := b.v   // retrieve value from received broadcastchannel
+	r.C <- b   // write same broadcastchannel to broadcastchannel
+	r.C = b.c  // broadcastchannel now becomes bc from broadcast
+	return v   // return received value
 }
