@@ -9,18 +9,20 @@ type broadcast struct {
 
 type broadcastChannel chan (chan broadcast)
 
+// Broadcaster -
 type Broadcaster struct {
 	// private fields:
 	Listenc chan broadcastChannel // listenerchannel
 	Sendc   chan<- interface{}    // send channel
 }
 
+// Receiver -
 type Receiver struct {
 	// private fields:
 	C chan broadcast // a receiver has a broadcast channel
 }
 
-// create a new broadcaster object.
+// NewBroadcaster - create a new broadcaster object.
 func NewBroadcaster() Broadcaster {
 	listenc := make(chan broadcastChannel) // listenerchannel which receives a broadcast channel
 	sendc := make(chan interface{})        // send channel
@@ -33,7 +35,8 @@ func NewBroadcaster() Broadcaster {
 			case v := <-sendc:
 				utils.Debugln("Send received")
 				if v == nil {
-					currc <- broadcast{} // send empty broadcast
+					utils.Debugln("Nil received")
+					currc <- broadcast{}
 					return
 				}
 				c := make(chan broadcast, 1) // create new broadcast channel
@@ -53,7 +56,7 @@ func NewBroadcaster() Broadcaster {
 	}
 }
 
-// start listening to the broadcasts.
+// Listen - start listening to the broadcasts.
 func (b Broadcaster) Listen() Receiver {
 	utils.Debugln("Listening")
 	c := make(broadcastChannel, 0) // create a broadcastchannel
@@ -62,7 +65,7 @@ func (b Broadcaster) Listen() Receiver {
 	return Receiver{<-c} // return receiver when broadcastchannel received
 }
 
-// broadcast a value to all listeners.
+// Write - broadcast a value to all listeners.
 func (b Broadcaster) Write(v interface{}) {
 	utils.Debugf("Sending %v\n", v)
 	b.Sendc <- v // write value on send channel
