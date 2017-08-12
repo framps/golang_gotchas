@@ -21,6 +21,7 @@ func main() {
 
 	org := flag.String("o", "", "Organization")
 	token := flag.String("t", "", "github token")
+	userAgent := flag.String("u", "I'm a test user", "github user")
 	flag.Parse()
 
 	var orgSet, tokenSet bool
@@ -48,7 +49,7 @@ func main() {
 
 	client := github.NewClient(tc)
 	client.BaseURL = &url.URL{Scheme: "https", Host: "api.github.com"}
-	client.UserAgent = "framp@linux-tips-andtricks.de"
+	client.UserAgent = *userAgent
 
 	opt := &github.RepositoryListByOrgOptions{Type: "public"}
 	repos, rsp, err := client.Repositories.ListByOrg(ctx, *org, opt)
