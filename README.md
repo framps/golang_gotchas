@@ -7,7 +7,7 @@ Anything I didn't know about golang and is somehow special to golang for me
 4. debugHTTPClient - Sample code which uses httputil to get low level debugging of http clients
 5. errorMarshaling - Sample code hoe marshaling of errors works
 6. fetchUrls - Use gofuncs to execute get requests against a number of urls and calculate responsetime statistics
-7. github - Retrieve all public repositories of a github organization
+7. github - Retrieve all public repositories of a github organization with a home grown client or a client using the google go-github library
 8. gorohttp - Sample how to kick off http requests as fast as possible
 9. httpClient - Sample how to use timeouts in a httpClient
 10. i18n - Sample code using github.com/nicksnyder/go-i18n/i18n to enable localization

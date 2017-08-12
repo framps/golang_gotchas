@@ -10,6 +10,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/google/go-github/github"
@@ -46,6 +47,8 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
+	client.BaseURL = &url.URL{Scheme: "https", Host: "api.github.com"}
+	client.UserAgent = "framp@linux-tips-andtricks.de"
 
 	opt := &github.RepositoryListByOrgOptions{Type: "public"}
 	repos, rsp, err := client.Repositories.ListByOrg(ctx, *org, opt)
@@ -54,7 +57,6 @@ func main() {
 	}
 
 	fmt.Printf("Github Limit: %d - Remaining: %d\n\n", rsp.Limit, rsp.Remaining)
-
 	fmt.Printf("Found %d repositories\n\n", len(repos))
 
 	for _, r := range repos {
@@ -62,8 +64,6 @@ func main() {
 		if r.Description != nil {
 			description = *r.Description
 		}
-
-		fmt.Printf("Name: %s - Description: %s\n", *r.Name, description)
-		fmt.Printf("CreatedAt: %s\n", r.CreatedAt.String())
+		fmt.Printf("Name: %s - CreatedAt: %s - UpdatedAt: %s - Description: %s\n", *r.Name, r.CreatedAt, r.UpdatedAt, description)
 	}
 }
