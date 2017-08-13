@@ -22,6 +22,7 @@ const (
 	gitHost = "https://api.github.com"
 )
 
+// Github headers returning rate limit info
 const (
 	headerRateLimit          = "X-RateLimit-Limit"
 	headerRateLimitRemaining = "X-RateLimit-Remaining"
@@ -36,28 +37,6 @@ type GithubClient struct {
 	UserAgent   string
 }
 
-// Timestamp - CreatedAt et al
-type Timestamp struct {
-	time.Time
-}
-
-func (t Timestamp) String() string {
-	return t.Time.String()
-}
-
-// UnmarshalJSON - Unmarshal Timestamp
-func (t *Timestamp) UnmarshalJSON(data []byte) (err error) {
-	dataAsString := string(data)
-	fmt.Printf("--- %s\n", dataAsString)
-	timeFromInt, err := strconv.ParseInt(dataAsString, 10, 64)
-	if err == nil {
-		(*t).Time = time.Unix(timeFromInt, 0)
-	} else {
-		(*t).Time, err = time.Parse(`"`+time.RFC3339+`"`, dataAsString)
-	}
-	return
-}
-
 // Rate - Rate header returned by git
 type Rate struct {
 	Limit     int       `json:"limit"`
@@ -67,10 +46,14 @@ type Rate struct {
 
 // Repository - Git repository
 type Repository struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	CreatedAt   *Timestamp `json:"created_at,omitempty"`
-	UpdatedAt   *Timestamp `json:"updated_at,omitempty"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at,omitempty"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
+}
+
+func (r Repository) String() string {
+	return fmt.Sprintf("Name: %s - Description: %s - Created: %s - Updated: %s", r.Name, r.Description, r.CreatedAt, r.UpdatedAt)
 }
 
 // Handle - Handle errors and panic
@@ -86,6 +69,7 @@ func (r Rate) String() string {
 	return fmt.Sprintf("Limit: %d - Remaining: %d - Reset: %s", r.Limit, r.Remaining, r.Reset.String())
 }
 
+// extract the rate header values
 func retrieveRate(r *http.Response) Rate {
 	var (
 		rate Rate
@@ -115,14 +99,15 @@ func NewGithubClient(apiURL string, client *http.Client, accessToken, userAgent 
 	return &GithubClient{APIUrl: apiURL, Client: client, AccessToken: accessToken, UserAgent: userAgent}
 }
 
+// Executes a http requests against github
 func (r GithubClient) executeRequest(url string, additionalHeaderParms ...headerParms) (*[]byte, Rate, error) {
 
 	fmt.Printf("Executing GET %s\n", url)
 	req, err := http.NewRequest("GET", url, nil)
 	Handle(err)
+
 	req.Header.Set("Authorization", "token "+r.AccessToken)
 	req.Header.Set("User-Agent", r.UserAgent)
-
 	if len(additionalHeaderParms) == 1 {
 		for k, v := range additionalHeaderParms[0] {
 			req.Header.Set(k, v)
@@ -145,7 +130,7 @@ func (r GithubClient) executeRequest(url string, additionalHeaderParms ...header
 	return &rsp, rate, nil
 }
 
-// GetReadme - Retrieve readme of a repo
+// GetReadme - Retrieve readme of a repo in html format
 func (r *GithubClient) GetReadme(org string, repository string) (*[]byte, Rate, error) {
 	url := fmt.Sprintf("%s/repos/%s/%s/readme", gitHost, org, repository)
 	addtlHeaderParms := headerParms{"Accept": "application/vnd.github.html"}
@@ -160,10 +145,7 @@ func (r *GithubClient) GetRepositoriesOfOrg(org string, repositoryType string) (
 	requestResult, rate, err := r.executeRequest(url)
 	Handle(err)
 
-	fmt.Printf("Repo response %s\n", string(*requestResult))
-
 	var result []Repository
-
 	json.Unmarshal(*requestResult, &result)
 	return result, rate, nil
 }
@@ -174,7 +156,6 @@ func main() {
 	token := flag.String("t", "", "github token")
 	repo := flag.String("r", "", "Repository to retrieve the readme")
 	userAgent := flag.String("u", "I'm a test user", "github user")
-
 	flag.Parse()
 
 	var orgSet, tokenSet, repoSet bool
@@ -206,13 +187,20 @@ func main() {
 	Handle(err)
 
 	fmt.Printf("Rate: %v\n", rate)
-	fmt.Printf("Repos: %#v\n", repos)
+
+	for _, r := range repos {
+		fmt.Printf("Repos: %s\n", r)
+	}
 
 	if repoSet {
 		readme, rate, err := repoClient.GetReadme(*org, *repo)
 		Handle(err)
 
-		err = ioutil.WriteFile("readme.html", *readme, 0644)
+		tempFile, err := ioutil.TempFile("/tmp", "gitClient")
+		Handle(err)
+		defer os.Remove(tempFile.Name())
+
+		err = ioutil.WriteFile(tempFile.Name(), *readme, 0644)
 		Handle(err)
 
 		fmt.Printf("Rate: %v\n", rate)
