@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 )
@@ -27,10 +28,31 @@ const (
 	headerRateLimitReset     = "X-RateLimit-Reset"
 )
 
-type GitRepository struct {
+type GithubClient struct {
 	APIUrl      string
 	Client      *http.Client
 	AccessToken string
+	UserAgent   string
+}
+
+type Timestamp struct {
+	time.Time
+}
+
+func (t Timestamp) String() string {
+	return t.Time.String()
+}
+
+func (t *Timestamp) UnmarshalJSON(data []byte) (err error) {
+	dataAsString := string(data)
+	fmt.Printf("--- %s\n", dataAsString)
+	timeFromInt, err := strconv.ParseInt(dataAsString, 10, 64)
+	if err == nil {
+		(*t).Time = time.Unix(timeFromInt, 0)
+	} else {
+		(*t).Time, err = time.Parse(`"`+time.RFC3339+`"`, dataAsString)
+	}
+	return
 }
 
 type Rate struct {
@@ -40,10 +62,13 @@ type Rate struct {
 }
 
 type Repository struct {
-	Name string `json:"name"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	CreatedAt   *Timestamp `json:created_at,omitempty"`
+	UpdatedAt   *Timestamp `json:updated_at,omitempty"`
 }
 
-func CheckForErrors(err error) {
+func Handle(err error) {
 	if err != nil {
 		panic(err)
 	}
@@ -62,11 +87,11 @@ func retrieveRate(r *http.Response) Rate {
 	)
 	if limit := r.Header.Get(headerRateLimit); limit != "" {
 		rate.Limit, err = strconv.Atoi(limit)
-		CheckForErrors(err)
+		Handle(err)
 	}
 	if remaining := r.Header.Get(headerRateLimitRemaining); remaining != "" {
 		rate.Remaining, err = strconv.Atoi(remaining)
-		CheckForErrors(err)
+		Handle(err)
 	}
 	if reset := r.Header.Get(headerRateLimitReset); reset != "" {
 		if v, _ := strconv.ParseInt(reset, 10, 64); v != 0 {
@@ -76,27 +101,29 @@ func retrieveRate(r *http.Response) Rate {
 	return rate
 }
 
-func NewGitRepository(apiUrl string, client *http.Client, accessToken string) *GitRepository {
+func NewGithubClient(apiUrl string, client *http.Client, accessToken, userAgent string) *GithubClient {
 	if client == nil {
 		client = &http.Client{}
 	}
-	return &GitRepository{APIUrl: apiUrl, Client: client, AccessToken: accessToken}
+	return &GithubClient{APIUrl: apiUrl, Client: client, AccessToken: accessToken, UserAgent: userAgent}
 }
 
-func (r GitRepository) ExecuteRequest(url string, additionalHeaderParms ...headerParms) (*[]byte, Rate, error) {
+func (r GithubClient) ExecuteRequest(url string, additionalHeaderParms ...headerParms) (*[]byte, Rate, error) {
 
+	fmt.Printf("Executing GET %s\n", url)
 	req, err := http.NewRequest("GET", url, nil)
-	CheckForErrors(err)
-	req.Header.Add("Authorization", "token "+r.AccessToken)
+	Handle(err)
+	req.Header.Set("Authorization", "token "+r.AccessToken)
+	req.Header.Set("User-Agent", r.UserAgent)
 
 	if len(additionalHeaderParms) == 1 {
 		for k, v := range additionalHeaderParms[0] {
-			req.Header.Add(k, v)
+			req.Header.Set(k, v)
 		}
 	}
 
 	res, err := r.Client.Do(req)
-	CheckForErrors(err)
+	Handle(err)
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
@@ -104,25 +131,27 @@ func (r GitRepository) ExecuteRequest(url string, additionalHeaderParms ...heade
 	}
 
 	rsp, err := ioutil.ReadAll(res.Body)
-	CheckForErrors(err)
+	Handle(err)
 
 	rate := retrieveRate(res)
 
 	return &rsp, rate, nil
 }
 
-func (r *GitRepository) GetReadme(org string, repository string) (*[]byte, Rate, error) {
+func (r *GithubClient) GetReadme(org string, repository string) (*[]byte, Rate, error) {
 	url := fmt.Sprintf("%s/repos/%s/%s/readme", gitHost, org, repository)
 	addtlHeaderParms := headerParms{"Accept": "application/vnd.github.html"}
 	result, rate, err := r.ExecuteRequest(url, addtlHeaderParms)
-	CheckForErrors(err)
+	Handle(err)
 	return result, rate, nil
 }
 
-func (r *GitRepository) GetRepositoriesOfOrg(org string, repositoryType string) ([]Repository, Rate, error) {
+func (r *GithubClient) GetRepositoriesOfOrg(org string, repositoryType string) ([]Repository, Rate, error) {
 	url := fmt.Sprintf("%s/orgs/%s/repos", gitHost, org)
 	requestResult, rate, err := r.ExecuteRequest(url)
-	CheckForErrors(err)
+	Handle(err)
+
+	fmt.Printf("Repo response %s\n", string(*requestResult))
 
 	var result []Repository
 
@@ -134,10 +163,12 @@ func main() {
 
 	org := flag.String("o", "", "Organization")
 	token := flag.String("t", "", "github token")
-	// repo := flag.String("r", "", "Repository to retrieve the readme")
+	repo := flag.String("r", "", "Repository to retrieve the readme")
+	userAgent := flag.String("u", "I'm a test user", "github user")
+
 	flag.Parse()
 
-	var orgSet, tokenSet bool
+	var orgSet, tokenSet, repoSet bool
 
 	flag.Visit(func(arg *flag.Flag) {
 		if arg.Name == "o" {
@@ -145,6 +176,9 @@ func main() {
 		}
 		if arg.Name == "t" {
 			tokenSet = true
+		}
+		if arg.Name == "r" {
+			repoSet = true
 		}
 	})
 
@@ -157,25 +191,25 @@ func main() {
 		Timeout: time.Second * 10,
 	}
 
-	repoClient := NewGitRepository(gitHost, client, *token)
+	repoClient := NewGithubClient(gitHost, client, *token, *userAgent)
 
 	repos, rate, err := repoClient.GetRepositoriesOfOrg(*org, "public")
-	CheckForErrors(err)
+	Handle(err)
 
 	fmt.Printf("Rate: %v\n", rate)
-	fmt.Printf("Repos: %v\n", repos)
+	fmt.Printf("Repos: %#v\n", repos)
 
-	/*
+	if repoSet {
 		readme, rate, err := repoClient.GetReadme(*org, *repo)
-		CheckForErrors(err)
+		Handle(err)
 
 		err = ioutil.WriteFile("readme.html", *readme, 0644)
-		CheckForErrors(err)
+		Handle(err)
 
 		fmt.Printf("Rate: %v\n", rate)
 
 		cmd := exec.Command("/usr/bin/firefox", "readme.html")
 		err = cmd.Start()
-		CheckForErrors(err)
-	*/
+		Handle(err)
+	}
 }
