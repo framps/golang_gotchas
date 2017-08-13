@@ -28,6 +28,7 @@ const (
 	headerRateLimitReset     = "X-RateLimit-Reset"
 )
 
+// GithubClient - Simple github client
 type GithubClient struct {
 	APIUrl      string
 	Client      *http.Client
@@ -35,6 +36,7 @@ type GithubClient struct {
 	UserAgent   string
 }
 
+// Timestamp - CreatedAt et al
 type Timestamp struct {
 	time.Time
 }
@@ -43,6 +45,7 @@ func (t Timestamp) String() string {
 	return t.Time.String()
 }
 
+// UnmarshalJSON - Unmarshal Timestamp
 func (t *Timestamp) UnmarshalJSON(data []byte) (err error) {
 	dataAsString := string(data)
 	fmt.Printf("--- %s\n", dataAsString)
@@ -55,19 +58,22 @@ func (t *Timestamp) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+// Rate - Rate header returned by git
 type Rate struct {
 	Limit     int       `json:"limit"`
 	Remaining int       `json:"remaining"`
 	Reset     time.Time `json:"reset"`
 }
 
+// Repository - Git repository
 type Repository struct {
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	CreatedAt   *Timestamp `json:created_at,omitempty"`
-	UpdatedAt   *Timestamp `json:updated_at,omitempty"`
+	CreatedAt   *Timestamp `json:"created_at,omitempty"`
+	UpdatedAt   *Timestamp `json:"updated_at,omitempty"`
 }
 
+// Handle - Handle errors and panic
 func Handle(err error) {
 	if err != nil {
 		panic(err)
@@ -101,14 +107,15 @@ func retrieveRate(r *http.Response) Rate {
 	return rate
 }
 
-func NewGithubClient(apiUrl string, client *http.Client, accessToken, userAgent string) *GithubClient {
+// NewGithubClient - Simple github client
+func NewGithubClient(apiURL string, client *http.Client, accessToken, userAgent string) *GithubClient {
 	if client == nil {
 		client = &http.Client{}
 	}
-	return &GithubClient{APIUrl: apiUrl, Client: client, AccessToken: accessToken, UserAgent: userAgent}
+	return &GithubClient{APIUrl: apiURL, Client: client, AccessToken: accessToken, UserAgent: userAgent}
 }
 
-func (r GithubClient) ExecuteRequest(url string, additionalHeaderParms ...headerParms) (*[]byte, Rate, error) {
+func (r GithubClient) executeRequest(url string, additionalHeaderParms ...headerParms) (*[]byte, Rate, error) {
 
 	fmt.Printf("Executing GET %s\n", url)
 	req, err := http.NewRequest("GET", url, nil)
@@ -138,17 +145,19 @@ func (r GithubClient) ExecuteRequest(url string, additionalHeaderParms ...header
 	return &rsp, rate, nil
 }
 
+// GetReadme - Retrieve readme of a repo
 func (r *GithubClient) GetReadme(org string, repository string) (*[]byte, Rate, error) {
 	url := fmt.Sprintf("%s/repos/%s/%s/readme", gitHost, org, repository)
 	addtlHeaderParms := headerParms{"Accept": "application/vnd.github.html"}
-	result, rate, err := r.ExecuteRequest(url, addtlHeaderParms)
+	result, rate, err := r.executeRequest(url, addtlHeaderParms)
 	Handle(err)
 	return result, rate, nil
 }
 
+// GetRepositoriesOfOrg - retrieve all repositories of an org
 func (r *GithubClient) GetRepositoriesOfOrg(org string, repositoryType string) ([]Repository, Rate, error) {
 	url := fmt.Sprintf("%s/orgs/%s/repos", gitHost, org)
-	requestResult, rate, err := r.ExecuteRequest(url)
+	requestResult, rate, err := r.executeRequest(url)
 	Handle(err)
 
 	fmt.Printf("Repo response %s\n", string(*requestResult))
