@@ -27,6 +27,14 @@ type SimpleStruct struct {
 	Value string
 }
 
+// SimplePointerStruct -
+type SimplePointerStruct struct {
+	OmitEmptySet   *string `json:",omitempty"`
+	OmitEmptyEmpty *string `json:",omitempty"`
+	RequiredSet    *string
+	RequiredEmpty  *string
+}
+
 // SimpleStructArray -
 type SimpleStructArray []SimpleStruct
 
@@ -64,6 +72,14 @@ var simpleStructArray = SimpleStructArray{
 	},
 }
 
+var omitEmpty = "OmitEmptySet"
+var required = "RequiredSet"
+
+var simplePointer = SimplePointerStruct{
+	OmitEmptySet: &omitEmpty,
+	RequiredSet:  &required,
+}
+
 var structSamples = []struct {
 	Name        string
 	StructValue interface{}
@@ -71,6 +87,7 @@ var structSamples = []struct {
 	{"SimpleStruct", simpleStruct},
 	{"SimpleStructArray", simpleStructArray},
 	{"SimpleStructList", simpleStructList},
+	{"SimplePointerStruct", simplePointer},
 }
 
 // --------------------------------------
@@ -173,6 +190,11 @@ SimpleStructList: {
       "Name": "Foo2",
       "Value": "Bar2"
    }
+}
+SimplePointerStruct: {
+   "OmitEmptySet": "OmitEmptySet",
+   "RequiredSet": "RequiredSet",
+   "RequiredEmpty": null
 }
 --------------- JSON to GO struct (Unmarshal) ----------------
 
