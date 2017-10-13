@@ -21,6 +21,11 @@ import (
 // --- different structs to marshal ---
 // ------------------------------------
 
+// SimpleInterfaceStruct -
+type SimpleInterfaceStruct struct {
+	Interface interface{}
+}
+
 // SimpleStruct -
 type SimpleStruct struct {
 	Name  string
