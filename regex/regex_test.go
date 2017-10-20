@@ -24,7 +24,7 @@ import (
 
 // replace a double quote string with \n (first version - does't work :-()
 
-func convertMultiplineToHereDoc(value string, regexString string) string {
+func convertMultilineComment(value string, regexString string) string {
 	re := regexp.MustCompile(regexString)
 	result := re.ReplaceAllString(value, "<$1>")
 	return result
@@ -32,7 +32,7 @@ func convertMultiplineToHereDoc(value string, regexString string) string {
 
 // replace a double quote string with \n (second version - works :-) )
 
-func convertMultiplineToHereDoc2(value string, regexString string) string {
+func convertMultilineComment2(value string, regexString string) string {
 	reg := regexp.MustCompile(regexString)
 	matchedStrings := reg.FindAllString(value, -1) // find all double quote strings
 	result := value
@@ -86,7 +86,7 @@ func ReplaceV1(t *testing.T) {
 	regexString := "(?m)\"((?:[^\"\\\\]|\\\\.)*\n(?:[^\"\\\\]|\\\\.)*)\""
 
 	for _, tt := range tests {
-		result := convertMultiplineToHereDoc(tt.input, regexString)
+		result := convertMultilineComment(tt.input, regexString)
 		// t.Logf("\nRegex: %s\nInput:\n%s\nOutput:\n%s\n", regexString, tt.input, result)
 		assert.Equal(t, tt.expected, result)
 	}
@@ -101,7 +101,7 @@ func ReplaceV2(t *testing.T) {
 	regexString := "(?m)\"((?:[^\"\\\\]|\\\\.)*)\""
 
 	for _, tt := range tests {
-		result := convertMultiplineToHereDoc2(tt.input, regexString)
+		result := convertMultilineComment2(tt.input, regexString)
 		// t.Logf("\nRegex: %s\nInput:\n%s\nOutput:\n%s\n", regexString, tt.input, result)
 		assert.Equal(t, tt.expected, result)
 	}
