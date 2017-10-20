@@ -1,3 +1,16 @@
+// Use regex to replace a double quote string containing \n with another contents
+//
+// Two solutions are provided:
+// V1: Buggy version which uses regex.ReplaceAllString
+// V2: Working version which uses regex.FindAllString and strings.Replace
+//
+// run buggy version
+// go test regex_test.go -run /V=1
+// run working version
+// go test regex_test.go -run /V=2
+//
+// Copyright (C) 2017 framp at linux-tips-and-tricks dot de
+
 package main
 
 import (
@@ -8,12 +21,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
-
-// run buggy version
-// go test regex_test.go -run /V=1
-
-// run working version
-// go test regex_test.go -run /V=2
 
 // replace a double quote string with \n (first version - does't work :-()
 
@@ -30,7 +37,7 @@ func convertMultiplineToHereDoc2(value string, regexString string) string {
 	matchedStrings := reg.FindAllString(value, -1) // find all double quote strings
 	result := value
 	for _, m := range matchedStrings {
-		if strings.ContainsAny(m, "\n\r") { // if there is a \n contained
+		if strings.ContainsAny(m, "\n\r") { // if there is a \n included
 			n := fmt.Sprintf("<%s>", m[1:len(m)-1])   // new string
 			result = strings.Replace(result, m, n, 1) // replace old string with new string
 		}
@@ -70,6 +77,9 @@ func TestFoo(t *testing.T) {
 	t.Run("V=1", func(t *testing.T) { ReplaceV2(t) })
 }
 
+// if input is "a" \n b "c\nd"
+// code incorrectly returns < \n b > but should return <c\nd>
+
 func ReplaceV1(t *testing.T) {
 
 	// match string with doublequotes which includes a newline"
@@ -81,6 +91,9 @@ func ReplaceV1(t *testing.T) {
 		assert.Equal(t, tt.expected, result)
 	}
 }
+
+// if input is "a" \n b "c\nd"
+// code correctly returns <c\nd>
 
 func ReplaceV2(t *testing.T) {
 
