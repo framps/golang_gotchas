@@ -1,52 +1,95 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func convertMultiplineToHereDoc(value string) string {
-	re := regexp.MustCompile(`\"([^"\n]+?\n+[^"\n]+?)\"`)
-	result := re.ReplaceAllString(value, "<\n$1>\n")
+// run buggy version
+// go test regex_test.go -run /V=1
+
+// run working version
+// go test regex_test.go -run /V=2
+
+// replace a double quote string with \n (first version - does't work :-()
+
+func convertMultiplineToHereDoc(value string, regexString string) string {
+	re := regexp.MustCompile(regexString)
+	result := re.ReplaceAllString(value, "<$1>")
 	return result
 }
 
-// table drivern test - usual test pattern in go
+// replace a double quote string with \n (second version - works :-) )
+
+func convertMultiplineToHereDoc2(value string, regexString string) string {
+	reg := regexp.MustCompile(regexString)
+	matchedStrings := reg.FindAllString(value, -1) // find all double quote strings
+	result := value
+	for _, m := range matchedStrings {
+		if strings.ContainsAny(m, "\n\r") { // if there is a \n contained
+			n := fmt.Sprintf("<%s>", m[1:len(m)-1])   // new string
+			result = strings.Replace(result, m, n, 1) // replace old string with new string
+		}
+	}
+	return result
+}
+
 var tests = []struct {
 	input    string
 	expected string
 }{
 
-	// empty strings
-	{"\"111\"\"\"222 \n, 333\"\"444",
-		"\"111\"\"\"222 \n, 333\"\"444"},
-	// empty strings with nl
-	{"\"111\"\"\n\"222 \n, 333\"\n\"444",
-		"\"111\"<\n\n>\n222 \n, 333<\n\n>\n444"},
-	/*
-		{"\"var\" = \"v11\n" +
-			"v12\"222 ,\n" +
-			"111\"v21\n" +
-			"v22\"222",
-			"\"var\" = <\n" +
-				"v11\n" +
-				"v12\n" +
-				">\n" +
-				"222 ,\n" +
-				"111<\n" +
-				"v21\n" +
-				"v22\n" +
-				">\n" +
-				"222"},
-	*/
+	{"a \"name\" = \"value\"",
+		"a \"name\" = \"value\""},
+	{"\"a \\t \\n \n b c \n d e\"",
+		"<a \\t \\n \n b c \n d e>"},
+	{"a \"name\" = \"val\\\"ue\"",
+		"a \"name\" = \"val\\\"ue\""},
+	{"a \"name\" = \"val\\tue\"",
+		"a \"name\" = \"val\\tue\""},
+	{"a \"name\" = \"val\ntue\"",
+		"a \"name\" = <val\ntue>"},
+	{"a \"name\" = \"val\n\tue\nwert\"",
+		"a \"name\" = <val\n\tue\nwert>"},
+	{"a \"name\" = \"val\n\tu\\\"e\nwert\"",
+		"a \"name\" = <val\n\tu\\\"e\nwert>"},
+	{"a \"name\" = \n \"val\n\tu\\\"e\nwert\"",
+		"a \"name\" = \n <val\n\tu\\\"e\nwert>"},
+	{"a \"name\" = \"val\n\tu\\\"e\nwert\" , \n \"val\n\tu\\\"e\nwert\"",
+		"a \"name\" = <val\n\tu\\\"e\nwert> , \n <val\n\tu\\\"e\nwert>"},
+	{"a \"name\" = \"val\n\tu\\\"e\nwert\" , \n [ \"val\n\tu\\\"e\nwert\" ] , \"name\" = \"val\n\tu\\\"e\nwert\"",
+		"a \"name\" = <val\n\tu\\\"e\nwert> , \n [ <val\n\tu\\\"e\nwert> ] , \"name\" = <val\n\tu\\\"e\nwert>"},
 }
 
-func TestReplace(t *testing.T) {
+func TestFoo(t *testing.T) {
+	t.Run("V=1", func(t *testing.T) { ReplaceV1(t) })
+	t.Run("V=1", func(t *testing.T) { ReplaceV2(t) })
+}
+
+func ReplaceV1(t *testing.T) {
+
+	// match string with doublequotes which includes a newline"
+	regexString := "(?m)\"((?:[^\"\\\\]|\\\\.)*\n(?:[^\"\\\\]|\\\\.)*)\""
+
 	for _, tt := range tests {
-		result := convertMultiplineToHereDoc(tt.input)
-		t.Logf("\n>>>:\n%s\n<<<:\n%s\n", tt.input, result)
+		result := convertMultiplineToHereDoc(tt.input, regexString)
+		// t.Logf("\nRegex: %s\nInput:\n%s\nOutput:\n%s\n", regexString, tt.input, result)
+		assert.Equal(t, tt.expected, result)
+	}
+}
+
+func ReplaceV2(t *testing.T) {
+
+	// match any string with doublequotes
+	regexString := "(?m)\"((?:[^\"\\\\]|\\\\.)*)\""
+
+	for _, tt := range tests {
+		result := convertMultiplineToHereDoc2(tt.input, regexString)
+		// t.Logf("\nRegex: %s\nInput:\n%s\nOutput:\n%s\n", regexString, tt.input, result)
 		assert.Equal(t, tt.expected, result)
 	}
 }
