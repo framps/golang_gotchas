@@ -1,5 +1,6 @@
 # golang gotchas
-Anything I didn't know about golang and is somehow special to golang for me with programming background in Java, Python, Groovy, C, C++ and others
+Anything I didn't know about golang and is somehow special to golang for me with programming background in Java, Python, Groovy, C, C++ and others.
+
 Maybe it helps others starting to use golang :-)
 
 1. [acceptLanguage](https://github.com/framps/golang_gotchas/blob/master/acceptlanguage/main.go) - Sample using golang.org/x/text/language to select the correct language from HTTP Accept-Language
