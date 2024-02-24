@@ -1,5 +1,5 @@
 # golang gotchas
-Anything I didn't know about golang and is somehow special to golang for me with programming background in Java, Python, Groovy, C, C++ and others.
+Anything I didn't know about golang and is somehow special to golang for me with programming background in Java, Python, Groovy, C, C++ and misc other programming languages
 
 Maybe it helps others starting to use golang :-)
 
